@@ -6,19 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="a24b6ab2-495b-4910-b870-bc24b6550d6b" name="Changes" comment="TestBase,first method in Login">
       <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/saucedemo/Login.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/saucedemo/TestBase.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/common_resource.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/environment.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/testBuy/testBuy.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/testLogin/testLogin.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/Login/TestLogin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +22,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="7fa78fe9-539a-4ce8-b475-28fc4a49662f" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -58,8 +49,8 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "last_opened_file_path": "C:/Users/dell/IdeaProjects/com.saucedemo",
     "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
 }]]></component>
@@ -116,6 +107,14 @@
       <option name="presentableId" value="Default" />
       <updated>1718643526747</updated>
     </task>
+    <task id="LOCAL-00001" summary="TestBase,first method in Login">
+      <created>1719763211921</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1719763211921</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
