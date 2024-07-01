@@ -16,6 +16,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.*;
@@ -29,116 +30,162 @@ public class TestBase {
     protected WebDriverWait wait;
     protected JavascriptExecutor js;
     protected Actions actions;
-    protected Properties props= new Properties();
+    protected Properties props;
 
     public TestBase() {super();}
 
-          private static final String USERNAME_INPUT_ID="user-name";
-          private static final String PASSWORD_INPUT_ID="password";
+    protected static final String USERNAME_INPUT_ID="user-name";
+    protected static final String PASSWORD_INPUT_ID="password";
     protected static final String LOGIN_BUTTON_ID="login-button";
     protected static final String FIRST_NAME_ID="first-name";
     protected static final String LAST_NAME_ID="last-name";
     protected static final String POSTAL_CODE_ID="postal-code";
 
-
-          public void setGlobalProp() throws Exception {
-              props.load(getClass().getResourceAsStream("/common_resource.properties"));
-              System.out.println("file common_resource.properties was uploaded");
-          }
-
-            public WebDriver getDriver(){return driver;}
-
-            @BeforeTest(alwaysRun=true)
-    public void setUp(){
-              try {
-                  setGlobalProp();
-              }catch (Exception e) {
-                  LOG.error("Global properties wasn't set"+ e);
-              }
-              System.setProperty("org.uncommons.reportng.escape-output", "false");
-                HashMap<String, Object> chromePrefs = new HashMap<>();
-                chromePrefs.put("profile.default_content_settings.popups", 0);
-
-                final ChromeOptions options = new ChromeOptions();
-                options.setExperimentalOption("prefs", chromePrefs);
-                options.addArguments("--test-type");
-                options.addArguments("--window-size=1280,1024");
-                options.addArguments("--remote-allow-origins=*");
-                if(props.getProperty("--headless").equals("true"))
-                {
-                    options.addArguments("--headless");
-                }
-                options.setCapability(ChromeOptions.CAPABILITY, options);
-                System.setProperty(props.getProperty("driver"), props.getProperty("chromeDriverPath"));
-                driver = new ChromeDriver(options);
-                wait = new WebDriverWait(driver,ofSeconds(40));
-                driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(40));
-                driver.manage().window().maximize();
-                js = ((JavascriptExecutor) driver);
-                actions = new Actions(driver);
-                driver.get(props.getProperty("url"));
-                String name = getNameBasedOnUrl();
-                Map<String, String> environmentData= new HashMap<>();
-                environmentData.put("URL", name);
-                environmentData.put("User", "Admin");
-                environmentData.put("OS", System.getProperty("os.name"));
-                environmentData.put("Browser","chrome");
-
+    public void setGlobalProp() throws Exception {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("common_resource.properties")) {
+            if (input == null) {
+                LOG.error("Sorry, unable to find common_resource.properties");
+                throw new IOException("File common_resource.properties not found");
             }
-            @AfterTest(alwaysRun = true)
-    public void tearDown() throws IOException{
-              driver.close();
-              driver.quit();
+            props.load(input);
+            System.out.println("file common_resource.properties was uploaded");
+        } catch (IOException ex) {
+            LOG.error("IOException: " + ex.getMessage());
+            throw ex;
+        }
 
+        try (InputStream envInput = getClass().getClassLoader().getResourceAsStream("environment.properties")) {
+            if (envInput == null) {
+                LOG.error("Sorry, unable to find environment.properties");
+                throw new IOException("File environment.properties not found");
             }
-            @AfterMethod(alwaysRun = true)
-            public void catchExceptions(ITestResult result, Method method) throws IOException {
-                if (!result.isSuccess()) {
-                    System.out.println("Test failed");
-                }
+            Properties envProps = new Properties();
+            envProps.load(envInput);
+            for (String key : envProps.stringPropertyNames()) {
+                props.setProperty(key, envProps.getProperty(key));
             }
-              protected String getProjectPath(){ return props.getProperty("projectPath");}
-    public String getNameBasedOnUrl(){
-              var url = props.getProperty("url");
-              var environmentName= props.getProperty("name");
-              if(url != null && url.contains(environmentName))
-              { LOG.debug("im here" + environmentName + " " + url );
-    } return environmentName;}
+        } catch (IOException ex) {
+            LOG.error("IOException: " + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public WebDriver getDriver() {
+        return driver;
+    }
+
+    @BeforeTest(alwaysRun = true)
+    public void setUp() {
+        props = new Properties();
+        try {
+            setGlobalProp();
+        } catch (Exception e) {
+            LOG.error("Global properties weren't set", e);
+            return;
+        }
+        System.setProperty("org.uncommons.reportng.escape-output", "false");
+        HashMap<String, Object> chromePrefs = new HashMap<>();
+        chromePrefs.put("profile.default_content_settings.popups", 0);
+
+        final ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("prefs", chromePrefs);
+        options.addArguments("--test-type");
+        options.addArguments("--window-size=1280,1024");
+        options.addArguments("--remote-allow-origins=*");
+
+        String headlessProp = props.getProperty("headless");
+        if ("true".equals(headlessProp)) {
+            options.addArguments("--headless");
+        }
+
+        options.setCapability(ChromeOptions.CAPABILITY, options);
+
+        String driverPath = props.getProperty("chromeDriverPath");
+        if (driverPath != null) {
+            System.setProperty("webdriver.chrome.driver", driverPath);
+        } else {
+            LOG.error("chromeDriverPath property is not set");
+            return;
+        }
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, ofSeconds(40));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(40));
+        driver.manage().window().maximize();
+        js = ((JavascriptExecutor) driver);
+        actions = new Actions(driver);
+
+        String url = props.getProperty("url");
+        if (url != null) {
+            driver.get(url);
+        } else {
+            LOG.error("url property is not set");
+            return;
+        }
+
+        String name = getNameBasedOnUrl();
+        Map<String, String> environmentData = new HashMap<>();
+        environmentData.put("URL", name);
+        environmentData.put("User", "Admin");
+        environmentData.put("OS", System.getProperty("os.name"));
+        environmentData.put("Browser", "chrome");
+    }
+
+    @AfterTest(alwaysRun = true)
+    public void tearDown() {
+        if (driver != null) {
+            driver.close();
+            driver.quit();
+        }
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void catchExceptions(ITestResult result, Method method) throws IOException {
+        if (!result.isSuccess()) {
+            System.out.println("Test failed");
+        }
+    }
+
+    protected String getProjectPath() {
+        return props.getProperty("projectPath");
+    }
+
+    public String getNameBasedOnUrl() {
+        var url = props.getProperty("url");
+        var environmentName = props.getProperty("name");
+        if (url != null && url.contains(environmentName)) {
+            LOG.debug("im here" + environmentName + " " + url);
+        }
+        return environmentName;
+    }
 
     protected WebElement getElementBy(String type, String typeValue) {
         switch (type) {
-            case ("id") -> {
+            case ("id"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(typeValue)));
                 return driver.findElement(By.id(typeValue));
-            }
-            case ("xPath") -> {
+            case ("xPath"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(typeValue)));
                 return driver.findElement(By.xpath(typeValue));
-            }
-            case ("href") -> {
+            case ("href"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("*//a[@href='" + typeValue + "']")));
                 return driver.findElement(By.xpath("*//a[@href='" + typeValue + "']"));
-            }
-            case ("name") -> {
+            case ("name"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.name(typeValue)));
                 return driver.findElement(By.name(typeValue));
-
-            }
-            case ("className") -> {
+            case ("className"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(typeValue)));
                 return driver.findElement(By.className(typeValue));
-            }
-            case ("value") -> {
+            case ("value"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("*//input[@value='" + typeValue + "']")));
                 return driver.findElement(By.xpath("*//input[@value='" + typeValue + "']"));
-            }
-            case ("cssSelector") -> {
+            case ("cssSelector"):
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(typeValue)));
                 return driver.findElement(By.cssSelector(typeValue));
-            }
         }
         return driver.findElement(By.cssSelector(typeValue));
     }
+
     protected List<WebElement> getElementsBy(String type, String typeValue) {
     return switch (type)
             {
@@ -175,16 +222,19 @@ public class TestBase {
               LOG.debug("Logged in to shop");
     }
 
-    protected Properties loadProperties(String path){
-              Properties testProps = new Properties();
-              try{
-                  testProps.load(getClass().getResourceAsStream(String.format("/%s/test.properties".replace("test",path), getClass().getPackage().getName().replaceAll("\\.","/"))));
-              } catch (IOException e){
-                  LOG.error("file test.properties wasn't uploaded" + e);
-              } LOG.debug("Run test: " + path);
-              LOG.debug("file test.properties was uploaded");
-              return testProps;
+
+    protected Properties loadProperties(String fileName) throws IOException {
+        Properties properties = new Properties();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("testLogin/" + fileName)) {
+            if (input == null) {
+                throw new IOException("File " + fileName + " not found");
+            }
+            properties.load(input);
+        }
+        return properties;
     }
+
+
     protected void setUserData(String firstName, String lastName, String postalCode){
               clickElementBy("id",FIRST_NAME_ID);
               setElementBy("id",FIRST_NAME_ID, firstName);
